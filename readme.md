@@ -16,7 +16,7 @@ You may need to change file paths as necessary as each platform (windows, mac, l
 
 ## Usage
 
-From within your layout, you can load the module. Currently this module only supports the Crt Lottes Shader.
+From within your layout, you can load the module.
 
 Example:
 
@@ -24,9 +24,16 @@ Example:
 // Create Artwork Variable
 local snap = fe.add_artwork("snap", 0, 0, 640, 480);
 
-// Load Shader Module and apply CrtLottes to snap
+// Load Shader Module
 if (fe.load_module("shader")) {
+  // CrtLottes
   local snapShader = CrtLottes();
+  
+  // RoundCorners
+  if (snap.preserve_aspect_ratio) RoundCorners(100, snap.width, snap.height);
+  else RoundCorners(100, snap.width, snap.height, snap.subimg_width, snap.subimg_height);
+  
+  // Apply the shader to your object
   snap.shader = snapShader.shader;
 }
 ```
@@ -37,10 +44,13 @@ See [module.nut](https://github.com/keilmillerjr/shader-module/blob/master/modul
 
 ```Squirrel
 CrtLottes(width, height, curvature, aperature, vertex, fragment);
+RoundCorners(radius, snapWidth, snapHeight, snapSubImgWidth, snapSubImgHeight);
 ```
 
 ## Notes
 
 Crt Lottes Shader is by Timothy Lottes. It was converted to MAME and AttractMode FE by Luke-Nukem found [here](https://github.com/Luke-Nukem/attract-extra/tree/master/layouts/lottes-crt). It has been slightly modified to allow for changes to some constants such as curvature.
+
+Round Corders Shader is by Oomek, and was shared on the AttractMode forum [here](http://forum.attractmode.org/index.php?topic=1588).
 
 More functionality is expected as it meets my needs. If you have an idea of something to add that might benefit a wide range of layout developers, please join the AttractMode forum and send me a message.

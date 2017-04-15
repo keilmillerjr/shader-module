@@ -92,3 +92,28 @@ class CrtLottes {
 		shader.set_texture_param("mpass_texture");
 	}
 }
+
+class RoundCorners {
+	shader = null;
+
+	constructor(r, iw, ih, siw=null, sih=null, f=fe.module_dir+"RoundCorners.fsh") {
+		shader = fe.add_shader(Shader.Fragment, f);
+		
+		setRadius(r);
+		setImgDimensions(iw, ih);
+		if (!siw || !sih ) setSubImgDimensions(iw, ih);
+		else setSubImgDimensions(siw, sih);
+	}
+	
+	function setRadius(val) {
+		shader.set_param("radius", val);
+	}
+	
+	function setImgDimensions(val1, val2) {
+		shader.set_param("snap_dimensions", val1, val2);
+	}
+	
+	function setSubImgDimensions(val1, val2) {
+		shader.set_param("subimg_dimensions", val1, val2);
+	}
+}

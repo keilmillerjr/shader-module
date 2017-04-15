@@ -10,7 +10,8 @@
 // Converted to MAME and AttractMode FE by Luke-Nukem (admin@garagearcades.co.nz)
 //  http://www.garagearcades.co.nz
 //
-//Comment these out to disable the corresponding effect.
+// Comment these out to disable the corresponding effect.
+
 uniform float CURVATURE; // Curved or Flat style.
 #define YUV // Saturation and Tint
 #define GAMMA_CONTRAST_BOOST //Expands contrast and makes image brighter but causes clipping.
