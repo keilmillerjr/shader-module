@@ -1,7 +1,7 @@
 class CrtLottes {
 	shader = null;
 
-	constructor(w=640, h=480, c=0, a=2.0, v=fe.module_dir+"CRT-lottes.vsh", f=fe.module_dir+"CRT-lottes_rgb32_dir.fsh") {
+	constructor(w=640, h=480, c=0, a=2.0, r=1.0, v=fe.module_dir+"CRT-lottes.vsh", f=fe.module_dir+"CRT-lottes_rgb32_dir.fsh") {
 		shader = fe.add_shader(Shader.VertexAndFragment, v, f);
 
 		curvature(c);
@@ -17,13 +17,14 @@ class CrtLottes {
 		tint();
 		backClip();
 		brightMult();
+		rotated(r);
 		setTextures(w, h);
 	}
 
 	function curvature(val=0) {
 		// 0 = Flat
 		// 1.0 = Curved
-		shader.set_param("CURVATURE", val);
+		shader.set_param("curvature", val);
 	}
 
 	function aperature(val=2.0) {
@@ -84,6 +85,12 @@ class CrtLottes {
 	function brightMult(val=1.25) {
 		// Multiplies the color settings by this amount if GAMMA_CONTRAST_BOOST is defined
 		shader.set_param("brightMult", val);
+	}
+	
+	function rotated(val=1.0) {
+		// 0 = Scan line orientation vertical.
+		// 1.0 = Scan line orientation horizontal.
+		shader.set_param("rotated", val);
 	}
 
 	function setTextures(w=640, h=480) {

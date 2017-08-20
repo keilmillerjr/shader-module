@@ -12,7 +12,8 @@
 //
 // Comment these out to disable the corresponding effect.
 
-uniform float CURVATURE; // Curved or Flat style.
+#define ROTATED
+#define CURVATURE; // Curved or Flat style.
 #define YUV // Saturation and Tint
 #define GAMMA_CONTRAST_BOOST //Expands contrast and makes image brighter but causes clipping.
 //#define ORIGINAL_SCANLINES //Enable to use the original scanlines.
@@ -47,6 +48,10 @@ uniform float tint;
 uniform float blackClip;
 uniform float brightMult;
 const vec3 gammaBoost = vec3(1.0/1.2, 1.0/1.2, 1.0/1.2);//An extra per channel gamma adjustment applied at the end.
+
+// AttractMode FE Variables
+uniform float rotated;
+uniform float curvature;
 
 //Here are the Tint/Saturation/GammaContrastBoost Variables.  Comment out "#define YUV" and "#define GAMMA_CONTRAST_BOOST" to disable these altogether.
 const float PI = 3.1415926535;
@@ -171,6 +176,9 @@ vec3 Tri(vec2 pos)
 // Shadow mask.
 vec3 Mask(vec2 pos)
 {
+#ifdef ROTATED
+    if (rotated == 1.0) { pos.xy=pos.yx; }
+#endif
     // Very compressed TV style shadow mask.
     if (aperature_type == 1.0)
     {
@@ -245,19 +253,22 @@ void main(void)
 {
   gl_FragColor.a = 1.0;
   
-  // Curved style
-  if (CURVATURE == 1.0)
-  {
-    vec2 pos = radialDistortion(texCoord);//CURVATURE
-    //FINAL//
-    gl_FragColor.rgb = Tri(pos) * Mask(gl_FragCoord.xy) * vec3(corner(pos));
-  }
-  // Flat style
-  else
-  {
+  #ifdef CURVATURE
+    if (curvature == 1.0)
+    {
+      vec2 pos = radialDistortion(texCoord);//CURVATURE
+      //FINAL//
+      gl_FragColor.rgb = Tri(pos) * Mask(gl_FragCoord.xy) * vec3(corner(pos));
+    }
+    else
+    {
+      vec2 pos = gl_TexCoord[0].xy;
+      gl_FragColor.rgb = Tri(pos) * Mask(gl_FragCoord.xy);
+    }
+  #else
     vec2 pos = gl_TexCoord[0].xy;
     gl_FragColor.rgb = Tri(pos) * Mask(gl_FragCoord.xy);
-  }
+  #endif
   
   #ifdef YUV
     gl_FragColor.rgb = vec3(dot(YUVr,gl_FragColor.rgb), dot(YUVg,gl_FragColor.rgb), dot(YUVb,gl_FragColor.rgb));
