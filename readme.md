@@ -16,41 +16,45 @@ You may need to change file paths as necessary as each platform (windows, mac, l
 
 ## Usage
 
-From within your layout, you can load the module.
+The shaders module provides a global variable ```shadersDirectory``` or ```shadersDir``` containing the shaders directory path. This enables you to use the shaders as you wish.
+
+You may optionally use the provided classes to make usage easier, and in some cases, set with default parameters. All classes utilize a public shader variable. This enables you to set some parameters outside of the defaults provided from the class.
 
 Example:
 
 ```Squirrel
-// Create Artwork Variable
-local snap = fe.add_artwork("snap", 0, 0, 640, 480);
+// Load the Shader module
+fe.load_module("shader");
 
-// Load Shader Module
-if (fe.load_module("shader")) {
-  // CrtLottes
-  local snapShader = CrtLottes();
-  
-  // RoundCorners
-  if (snap.preserve_aspect_ratio) RoundCorners(100, snap.width, snap.height);
-  else RoundCorners(100, snap.width, snap.height, snap.subimg_width, snap.subimg_height);
-  
-  // Apply the shader to your object
-  snap.shader = snapShader.shader;
-}
+// Create your shaders
+local shaderBloom = Bloom();
+
+// Create an object
+local surf = fe.add_surface(640, 480);
+
+// Apply shader
+surf.shader = shaderBloom.shader;
 ```
 
-#### Optional Params
+#### Parameters
 
-See [module.nut](https://github.com/keilmillerjr/shader-module/blob/master/module.nut) for notes on acceptable variables and public class functions to change other params.
+See [module.nut](https://github.com/keilmillerjr/shader-module/blob/master/module.nut) for notes on parameters.
 
 ```Squirrel
-CrtLottes(width, height, curvature, aperature, vertex, fragment);
-RoundCorners(radius, snapWidth, snapHeight, snapSubImgWidth, snapSubImgHeight);
+Bloom();
+BloomMultipass();
+crtCgwg();
+CrtLottes();
+crtLottesMultipass();
+RoundCorners(radius, imageWidth, imageHeight, [subImgWidth], [subImgHeight]);
 ```
 
 ## Notes
 
-Crt Lottes Shader is by Timothy Lottes. It was converted to MAME and AttractMode FE by Luke-Nukem found [here](https://github.com/Luke-Nukem/attract-extra/tree/master/layouts/lottes-crt). It has been slightly modified to allow for changes to some constants such as curvature.
+Bloom shader from [here](http://wp.applesandoranges.eu/?p=14), modified by Chris Van Graas. Crt Lottes Shader and Bloom Multipass is by Timothy Lottes. Crt Cgwg is by Themaister and DOLLS. They were converted to work with AttractMode FE by Luke-Nukem, found in his [crt-shader-theme](https://gitlab.com/ljcode/crt-shader-theme).
 
 Round Corders Shader is by Oomek, and was shared on the AttractMode forum [here](http://forum.attractmode.org/index.php?topic=1588).
+
+All shaders were used here with permission. Thank you so much for your contribution. Including them in a module makes it easier to be included in a layout.
 
 More functionality is expected as it meets my needs. If you have an idea of something to add that might benefit a wide range of layout developers, please join the AttractMode forum and send me a message.

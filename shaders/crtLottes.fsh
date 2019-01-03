@@ -10,29 +10,37 @@
 // Converted to MAME and AttractMode FE by Luke-Nukem (admin@garagearcades.co.nz)
 //  http://www.garagearcades.co.nz
 //
+// Modifications for AttractMode FE by Chris Van Graas (@chrisvangraas)
+//
 // Comment these out to disable the corresponding effect.
 
+// Handle layout rotation in AttractMode FE
 #define ROTATED
-#define CURVATURE; // Curved or Flat style.
-#define YUV // Saturation and Tint
-#define GAMMA_CONTRAST_BOOST //Expands contrast and makes image brighter but causes clipping.
-//#define ORIGINAL_SCANLINES //Enable to use the original scanlines.
-#define ORIGINAL_HARDPIX //Enable to use the original hardPix calculation.  But systems rendered in lower res textures will be much blurrier than systems in higher resolution textures (compare NES and TG16...)
+// CRT Screen Shape
+#define CURVATURE
+// Saturation and Tint
+#define YUV
+// Expands contrast and makes image brighter but causes clipping.
+#define GAMMA_CONTRAST_BOOST
+// Enable to use the original scanlines.
+// #define ORIGINAL_SCANLINES
+// Enable to use the original hardPix calculation.  But systems rendered in lower res textures will be much blurrier than systems in higher resolution textures (compare NES and TG16...)
+//#define ORIGINAL_HARDPIX
 
 #pragma optimize (on)
 #pragma debug (off)
 
 // FOR CRT GEOM
 #define FIX(c) max(abs(c), 1e-5);
-#define TEX2D(c) texture2D(mpass_texture, (c)).rgb
-varying vec2 texCoord;
+#define TEX2D(c) texture2D(texture, (c)).rgb
+varying vec2  texCoord;
 uniform float aperature_type;
 uniform float distortion;
 uniform float cornersize;
 uniform float cornersmooth;
 
 //Normal MAME GLSL Uniforms
-uniform sampler2D mpass_texture;
+uniform sampler2D texture;
 uniform vec2      color_texture_sz;         // size of color_texture
 uniform vec2      color_texture_pow2_sz;    // size of color texture rounded up to power of 2
 
@@ -47,11 +55,11 @@ uniform float tint;
 // GAMMA Variables
 uniform float blackClip;
 uniform float brightMult;
-const vec3 gammaBoost = vec3(1.0/1.2, 1.0/1.2, 1.0/1.2);//An extra per channel gamma adjustment applied at the end.
-
 // AttractMode FE Variables
 uniform float rotated;
-uniform float curvature;
+uniform float vert;
+
+const vec3 gammaBoost = vec3(1.0/1.2, 1.0/1.2, 1.0/1.2);//An extra per channel gamma adjustment applied at the end.
 
 //Here are the Tint/Saturation/GammaContrastBoost Variables.  Comment out "#define YUV" and "#define GAMMA_CONTRAST_BOOST" to disable these altogether.
 const float PI = 3.1415926535;
@@ -87,9 +95,9 @@ vec3 ToSrgb(vec3 c)
 // Also zero's off screen.
 vec3 Fetch(vec2 pos, vec2 off)
 {
-  pos = (floor(pos * color_texture_pow2_sz + off) + 0.5) / color_texture_pow2_sz;
-  //if(max(abs(pos.x-0.5),abs(pos.y-0.5))>0.5)return vec3(0.0,0.0,0.0);
-  return ToLinear(texture2D(mpass_texture, pos.xy).rgb);
+    pos = (floor(pos * color_texture_pow2_sz + off) + 0.5) / color_texture_pow2_sz;
+    // if(max(abs(pos.x-0.5),abs(pos.y-0.5))>0.5)return vec3(0.0,0.0,0.0);
+    return ToLinear(texture2D(texture, pos.xy).rgb);
 }
 
 // Distance in emulated pixels to nearest texel.
@@ -108,71 +116,76 @@ float Gaus(float pos,float scale)
 // 3-tap Gaussian filter along horz line.
 vec3 Horz3(vec2 pos,float off)
 {
-  vec3 b = Fetch(pos, vec2(-1.0, off));
-  vec3 c = Fetch(pos, vec2( 0.0, off));
-  vec3 d = Fetch(pos, vec2( 1.0, off));
-  float dst = Dist(pos).x;
-  // Convert distance to weight.
+    vec3 b = Fetch(pos, vec2(-1.0, off));
+    vec3 c = Fetch(pos, vec2( 0.0, off));
+    vec3 d = Fetch(pos, vec2( 1.0, off));
+    float dst = Dist(pos).x;
+    // Convert distance to weight.
 #ifdef ORIGINAL_HARDPIX
-  float scale = hardPix;
+    float scale = hardPix;
 #else
-  float scale = hardPix * max(0.0, 2.0 - color_texture_sz.x / 512.0);//Modified to keep sharpness somewhat comparable across drivers.
+    float scale = hardPix * max(0.0, 2.0 - color_texture_sz.x / 512.0);//Modified to keep sharpness somewhat comparable across drivers.
 #endif
-  float wb = Gaus(dst - 1.0, scale);
-  float wc = Gaus(dst + 0.0, scale);
-  float wd = Gaus(dst + 1.0, scale);
-  // Return filtered sample.
-  return (b * wb + c * wc + d * wd) / (wb + wc + wd);}
+    float wb = Gaus(dst - 1.0, scale);
+    float wc = Gaus(dst + 0.0, scale);
+    float wd = Gaus(dst + 1.0, scale);
+    // Return filtered sample.
+    return (b * wb + c * wc + d * wd) / (wb + wc + wd);
+}
 
 // 5-tap Gaussian filter along horz line.
 vec3 Horz5(vec2 pos,float off)
 {
-  vec3 a = Fetch(pos, vec2(-2.0, off));
-  vec3 b = Fetch(pos, vec2(-1.0, off));
-  vec3 c = Fetch(pos, vec2( 0.0, off));
-  vec3 d = Fetch(pos, vec2( 1.0, off));
-  vec3 e = Fetch(pos, vec2( 2.0, off));
-  float dst = Dist(pos).x;
-  // Convert distance to weight.
+    vec3 a = Fetch(pos, vec2(-2.0, off));
+    vec3 b = Fetch(pos, vec2(-1.0, off));
+    vec3 c = Fetch(pos, vec2( 0.0, off));
+    vec3 d = Fetch(pos, vec2( 1.0, off));
+    vec3 e = Fetch(pos, vec2( 2.0, off));
+    float dst = Dist(pos).x;
+    // Convert distance to weight.
 #ifdef ORIGINAL_HARDPIX
-  float scale = hardPix;
+    float scale = hardPix;
 #else
-  float scale = hardPix * max(0.0, 2.0 - color_texture_sz.x / 512.0);//Modified to keep sharpness somewhat comparable across drivers.
+    float scale = hardPix * max(0.0, 2.0 - color_texture_sz.x / 512.0); // Modified to keep sharpness somewhat comparable across drivers.
 #endif
-  float wa = Gaus(dst - 2.0, scale);
-  float wb = Gaus(dst - 1.0, scale);
-  float wc = Gaus(dst + 0.0, scale);
-  float wd = Gaus(dst + 1.0, scale);
-  float we = Gaus(dst + 2.0, scale);
-  // Return filtered sample.
-  return (a * wa + b * wb + c * wc + d * wd + e * we) / (wa + wb + wc + wd + we);
+    float wa = Gaus(dst - 2.0, scale);
+    float wb = Gaus(dst - 1.0, scale);
+    float wc = Gaus(dst + 0.0, scale);
+    float wd = Gaus(dst + 1.0, scale);
+    float we = Gaus(dst + 2.0, scale);
+    // Return filtered sample.
+    return (a * wa + b * wb + c * wc + d * wd + e * we) / (wa + wb + wc + wd + we);
 }
 
 // Return scanline weight.
 float Scan(vec2 pos,float off)
 {
-  float dst = Dist(pos).y;
-  vec3 col = Fetch(pos,vec2(0.0));
+    float dst = Dist(pos).y;
+    if (vert == 1.0)
+    {
+        dst = Dist(pos).x;
+    }
+    vec3 col = Fetch(pos,vec2(0.0));
 #ifdef ORIGINAL_SCANLINES
-  return Gaus(dst + off, hardScan);
-}
+    return Gaus(dst + off, hardScan);
 #else
-  return Gaus( dst + off, hardScan / (dot(col, col) * 0.1667 + 1.0) );
-} //Modified to make scanline respond to pixel brightness
+    return Gaus( dst + off, hardScan / (dot(col, col) * 0.1667 + 1.0) );
+    // Modified to make scanline respond to pixel brightness
 #endif
+}
 
 // Allow nearest three lines to effect pixel.
 vec3 Tri(vec2 pos)
 {
-  vec3 a = Horz3(pos, -1.0);
-  vec3 b = Horz5(pos, 0.0);
-  vec3 c = Horz3(pos, 1.0);
-  float wa = Scan(pos, -1.0);
-  float wb = Scan(pos, 0.0);
-  float wc = Scan(pos, 1.0);
-  return a * wa + b * wb + c * wc;
+    vec3 a = Horz3(pos, -1.0);
+    vec3 b = Horz5(pos, 0.0);
+    vec3 c = Horz3(pos, 1.0);
+    float wa = Scan(pos, -1.0);
+    float wb = Scan(pos, 0.0);
+    float wc = Scan(pos, 1.0);
+    return a * wa + b * wb + c * wc;
 }
-	
+    
 // Shadow mask.
 vec3 Mask(vec2 pos)
 {
@@ -202,14 +215,27 @@ vec3 Mask(vec2 pos)
     // Aperture-grille.
     else if (aperature_type == 2.0)
     {
-        pos.x = fract(pos.x / 3.0);
         vec3 mask = vec3(maskDark, maskDark, maskDark);
-        if (pos.x < 0.333)
-            mask.r = maskLight;
-        else if (pos.x < 0.666)
-            mask.g = maskLight;
-        else 
-            mask.b = maskLight;
+        if (vert == 1.0)
+        {
+            pos.y = fract(pos.y / 3.0);
+            if (pos.y < 0.333)
+                mask.r = maskLight;
+            else if (pos.y < 0.666)
+                mask.g = maskLight;
+            else 
+                mask.b = maskLight;
+        }
+        else
+        {
+            pos.x = fract(pos.x / 3.0);
+            if (pos.x < 0.333)
+                mask.r = maskLight;
+            else if (pos.x < 0.666)
+                mask.g = maskLight;
+            else 
+                mask.b = maskLight;
+        }
         return mask;
     }
     // VGA style shadow mask.
@@ -240,42 +266,34 @@ vec2 radialDistortion(vec2 coord) {
 
 float corner(vec2 coord)
 {
-  coord *= color_texture_pow2_sz / color_texture_sz;
-  coord = (coord - vec2(0.5)) + vec2(0.5);
-  coord = min(coord, vec2(1.0)-coord);
-  vec2 cdist = vec2(cornersize);
-  coord = (cdist - min(coord,cdist));
-  float dist = sqrt(dot(coord,coord));
-  return clamp((cdist.x-dist)*cornersmooth,0.0, 1.0);
+    coord *= color_texture_pow2_sz / color_texture_sz;
+    coord = (coord - vec2(0.5)) + vec2(0.5);
+    coord = min(coord, vec2(1.0)-coord);
+    vec2 cdist = vec2(cornersize);
+    coord = (cdist - min(coord,cdist));
+    float dist = sqrt(dot(coord,coord));
+    return clamp((cdist.x-dist)*cornersmooth,0.0, 1.0);
 }
 ///////////////////////////////////////////////////////////////
 void main(void)
 {
-  gl_FragColor.a = 1.0;
-  
-  #ifdef CURVATURE
-    if (curvature == 1.0)
-    {
-      vec2 pos = radialDistortion(texCoord);//CURVATURE
-      //FINAL//
-      gl_FragColor.rgb = Tri(pos) * Mask(gl_FragCoord.xy) * vec3(corner(pos));
-    }
-    else
-    {
-      vec2 pos = gl_TexCoord[0].xy;
-      gl_FragColor.rgb = Tri(pos) * Mask(gl_FragCoord.xy);
-    }
-  #else
+    gl_FragColor.a = 1.0;
+
+#ifdef CURVATURE
+    vec2 pos = radialDistortion(texCoord);//CURVATURE
+    //FINAL//
+    gl_FragColor.rgb = Tri(pos) * Mask(gl_FragCoord.xy) * vec3(corner(pos));
+#else
     vec2 pos = gl_TexCoord[0].xy;
     gl_FragColor.rgb = Tri(pos) * Mask(gl_FragCoord.xy);
-  #endif
-  
-  #ifdef YUV
+#endif
+
+#ifdef YUV
     gl_FragColor.rgb = vec3(dot(YUVr,gl_FragColor.rgb), dot(YUVg,gl_FragColor.rgb), dot(YUVb,gl_FragColor.rgb));
     gl_FragColor.rgb = clamp(ToSrgb(gl_FragColor.rgb), 0.0, 1.0);
-  #endif
-    
-  #ifdef GAMMA_CONTRAST_BOOST
+#endif
+  
+#ifdef GAMMA_CONTRAST_BOOST
     gl_FragColor.rgb=brightMult*pow(gl_FragColor.rgb,gammaBoost )-vec3(blackClip);
-  #endif
+#endif
 }
