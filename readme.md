@@ -43,9 +43,9 @@ See [module.nut](https://github.com/keilmillerjr/shader-module/blob/master/modul
 ```Squirrel
 Bloom();
 BloomMultipass();
-crtCgwg();
+CrtCgwg();
 CrtLottes();
-crtLottesMultipass();
+CrtLottesMultipass();
 RoundCorners(radius, imageWidth, imageHeight, [subImgWidth], [subImgHeight]);
 ```
 
