@@ -43,6 +43,7 @@ See [module.nut](https://github.com/keilmillerjr/shader-module/blob/master/modul
 ```Squirrel
 Bloom();
 BloomMultipass();
+Colorize(hue, saturation, lightness);
 CrtCgwg();
 CrtLottes();
 CrtLottesMultipass();
@@ -52,6 +53,8 @@ RoundCorners(radius, imageWidth, imageHeight, [subImgWidth], [subImgHeight]);
 ## Notes
 
 Bloom shader from [here](http://wp.applesandoranges.eu/?p=14), modified by Chris Van Graas. Crt Lottes Shader and Bloom Multipass is by Timothy Lottes. Crt Cgwg is by Themaister and DOLLS. They were converted to work with AttractMode FE by Luke-Nukem, found in his [crt-shader-theme](https://gitlab.com/ljcode/crt-shader-theme).
+
+Colorize and Desaturate shaders from [here](http://forum.attractmode.org/index.php?topic=2501.0) by zpaolo11x.
 
 Round Corders Shader is by Oomek, and was shared on the AttractMode forum [here](http://forum.attractmode.org/index.php?topic=1588).
 

@@ -30,6 +30,21 @@ class BloomMultipass {
 	}
 }
 
+class Colorize {
+	shader = null;
+
+	constructor(h=0.6 ,s=1.0, l=1.0) {
+		shader = fe.add_shader(Shader.Fragment, shadersDir + "colorize.fsh");
+		set_default(vargv[0], vargv[2], vargv[3]);
+	}
+
+	function set_default(h, s, l) {
+		shader.set_texture_param("texture");
+		shader.set_param("hsl", h, s, l);
+		shader.set_param("texmix", 0.0);
+	}
+}
+
 class CrtCgwg {
 	shader = null;
 
@@ -98,6 +113,19 @@ class CrtLottesMultipass {
 		shader.set_texture_param("source");
 		shader.set_param("sourceSize", 320, 240);
 		shader.set_param("outputSize", 320, 240);
+	}
+}
+
+class Desaturate {
+	shader = null;
+
+	constructor() {
+		shader = fe.add_shader(Shader.Fragment, shadersDir + "desaturate.fsh");
+		set_default();
+	}
+
+	function set_default() {
+		shader.set_texture_param("texture");
 	}
 }
 
